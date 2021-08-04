@@ -1,0 +1,53 @@
+image: registry.gitlab.com/gitlab-org/terraform-images/stable:latest
+
+variables:
+  TF_ROOT: ${CI_PROJECT_DIR}/terraform
+  TF_ADDRESS: ${CI_API_V4_URL}/projects/28599578/terraform/state/prod
+  TF_STATE_NAME_: prod
+  TF_CACHE_KEY: prod
+
+cache:
+  key: prod
+  paths:
+    - ${TF_ROOT}/.terraform
+
+stages:
+  - prepare
+  - validate
+  - deploy
+
+init:
+  stage: prepare
+  before_script:
+  - cd ${TF_ROOT}
+  script:
+    - gitlab-terraform init
+
+validate:
+  stage: validate
+  before_script:
+  - cd ${TF_ROOT}
+  script:
+    - gitlab-terraform validate
+
+plan:
+  stage: validate
+  before_script:
+  - cd ${TF_ROOT}
+  script:
+    - gitlab-terraform plan
+    - gitlab-terraform plan-json
+  artifacts:
+    name: plan
+    paths:
+      - ${TF_ROOT}/plan.cache
+    reports:
+      terraform: ${TF_ROOT}/plan.json
+
+apply:
+  stage: deploy
+  before_script:
+  - cd ${TF_ROOT}
+  script:
+    - gitlab-terraform apply
+

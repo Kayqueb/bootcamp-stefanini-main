@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: zabbix-agent
+  name: zabbix-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zabbix-agent
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: zabbix-agent
+    spec:
+      containers:
+        - name: zabbix-agent
+          image: zabbix/zabbix-agent:ubuntu-5.4-latest
+          imagePullPolicy: Always
+          resources:
+           limits:
+            cpu: 500m
+            memory: 256M
+           requests:
+            cpu: 200m
+            memory: 128M
+          ports:
+          - containerPort: 10050
+            name: zabbix-agent
+          env:
+          - name: ZBX_HOSTNAME
+            value: "zabbix-server"
+          - name: ZBX_SERVER_HOST
+            value: "zabbix-server"
+          volumeMounts:
+          - name: agent-pv-claim
+            mountPath: /etc/zabbix/zabbix_agentd.d  
+      volumes:
+        - name: agent-pv-claim
+          persistentVolumeClaim:
+            claimName: agent-pv-claim      
+status: {}
+
